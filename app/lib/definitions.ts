@@ -2,6 +2,7 @@
 // It describes the shape of the data, and what data type each property should accept.
 // For simplicity of teaching, we're manually defining these types.
 // However, these types are generated automatically if you're using an ORM such as Prisma.
+
 export type User = {
   id: string;
   name: string;
@@ -21,8 +22,6 @@ export type Invoice = {
   customer_id: string;
   amount: number;
   date: string;
-  // In TypeScript, this is called a string union type.
-  // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
   status: 'pending' | 'paid';
 };
 
@@ -39,7 +38,6 @@ export type LatestInvoice = {
   amount: string;
 };
 
-// The database returns a number for amount, but we later format it to a string with the formatCurrency function
 export type LatestInvoiceRaw = Omit<LatestInvoice, 'amount'> & {
   amount: number;
 };
@@ -85,4 +83,34 @@ export type InvoiceForm = {
   customer_id: string;
   amount: number;
   status: 'pending' | 'paid';
+};
+
+// Role type definition
+
+/// Type representing a role in the system
+export type Role = {
+  id: string; // Unique identifier for the role
+  name: string; // Name of the role
+  description: string; // Description of the role
+};
+
+// Role form definition for creating or updating roles
+export type RoleForm = {
+  id?: string; // Optional for creating new roles, required for updates
+  name: string; // Name of the role
+  description: string; // Description of the role
+};
+
+// Type for displaying roles in a table format
+export type RolesTable = {
+  id: string; // Unique identifier for the role
+  name: string; // Name of the role
+  description: string; // Description of the role
+};
+
+// RoleField type representing individual fields of a role
+export type RoleField = {
+  id: string;          // Unique identifier for the role
+  name: string;        // Name of the role
+  description: string; // Description of the role
 };

@@ -163,6 +163,78 @@ export function InvoicesMobileSkeleton() {
   );
 }
 
+
+
+
+export function RoleSkeleton() {
+  return (
+    <tr className="w-full border-b border-gray-100 last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg">
+      {/* Role Name */}
+      <td className="relative overflow-hidden whitespace-nowrap py-3 pl-6 pr-3">
+        <div className="flex items-center gap-3">
+          <div className="h-6 w-36 rounded bg-gray-100"></div>
+        </div>
+      </td>
+      {/* Description */}
+      <td className="whitespace-nowrap px-3 py-3">
+        <div className="h-6 w-48 rounded bg-gray-100"></div>
+      </td>
+      {/* Permissions */}
+      <td className="whitespace-nowrap px-3 py-3">
+        <div className="h-6 w-32 rounded bg-gray-100"></div>
+      </td>
+      {/* Actions */}
+      <td className="whitespace-nowrap py-3 pl-6 pr-3">
+        <div className="flex justify-end gap-3">
+          <div className="h-[38px] w-[38px] rounded bg-gray-100"></div>
+          <div className="h-[38px] w-[38px] rounded bg-gray-100"></div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+export function RolesTableSkeleton() {
+  return (
+    <div className="mt-6 flow-root">
+      <div className="inline-block min-w-full align-middle">
+        <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+          <table className="min-w-full text-gray-900">
+            <thead className="rounded-lg text-left text-sm font-normal">
+              <tr>
+                <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
+                  Role Name
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Description
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Permissions
+                </th>
+                <th
+                  scope="col"
+                  className="relative pb-4 pl-3 pr-6 pt-2 sm:pr-6"
+                >
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              <RoleSkeleton />
+              <RoleSkeleton />
+              <RoleSkeleton />
+              <RoleSkeleton />
+              <RoleSkeleton />
+              <RoleSkeleton />
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 export function InvoicesTableSkeleton() {
   return (
     <div className="mt-6 flow-root">
@@ -214,5 +286,78 @@ export function InvoicesTableSkeleton() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+
+
+
+
+
+
+export function CustomersTableSkeleton() {
+  return (
+    <div className="mt-6 flow-root">
+      <div className="inline-block min-w-full align-middle">
+        <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+          <table className="min-w-full text-gray-900">
+            <thead className="rounded-lg text-left text-sm font-normal">
+              <tr>
+                <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
+                  Customer Name
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Email
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Phone
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Address
+                </th>
+                <th
+                  scope="col"
+                  className="relative pb-4 pl-3 pr-6 pt-2 sm:pr-6"
+                >
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              <CustomerSkeleton />
+              <CustomerSkeleton />
+              <CustomerSkeleton />
+              <CustomerSkeleton />
+              <CustomerSkeleton />
+              <CustomerSkeleton />
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// CustomerSkeleton component to represent loading state for individual customer
+function CustomerSkeleton() {
+  return (
+    <tr className="animate-pulse">
+      <td className="px-4 py-4 sm:pl-6">
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      </td>
+      <td className="px-3 py-4">
+        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      </td>
+      <td className="px-3 py-4">
+        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+      </td>
+      <td className="px-3 py-4">
+        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      </td>
+      <td className="relative pb-4 pl-3 pr-6 pt-2 sm:pr-6">
+        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+      </td>
+    </tr>
   );
 }

@@ -233,6 +233,40 @@ export function RolesTableSkeleton() {
     </div>
   );
 }
+//customer
+export function CustomerSkeleton() {
+  return (
+    <tr className="w-full border-b border-gray-100 last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg">
+      {/* Customer Name */}
+      <td className="whitespace-nowrap py-3 pl-6 pr-3">
+        <div className="h-6 w-36 rounded bg-gray-100"></div>
+      </td>
+      {/* Email */}
+      <td className="whitespace-nowrap py-3 pl-6 pr-3">
+        <div className="h-6 w-48 rounded bg-gray-100"></div>
+      </td>
+    </tr>
+  );
+}
+
+export function CustomerTableSkeleton() {
+  return (
+    <table className="min-w-full border-collapse">
+      <thead>
+        <tr>
+          <th className="border-b border-gray-200 px-6 py-3 text-left text-gray-600">Name</th>
+          <th className="border-b border-gray-200 px-6 py-3 text-left text-gray-600">Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {/* Repeat the CustomerSkeleton for loading placeholders */}
+        {Array.from({ length: 5 }).map((_, index) => (
+          <CustomerSkeleton key={index} />
+        ))}
+      </tbody>
+    </table>
+  );
+}
 
 
 export function InvoicesTableSkeleton() {
@@ -295,7 +329,7 @@ export function InvoicesTableSkeleton() {
 
 
 
-
+//customers
 export function CustomersTableSkeleton() {
   return (
     <div className="mt-6 flow-root">
@@ -340,7 +374,7 @@ export function CustomersTableSkeleton() {
 }
 
 // CustomerSkeleton component to represent loading state for individual customer
-function CustomerSkeleton() {
+function CustomersSkeleton() {
   return (
     <tr className="animate-pulse">
       <td className="px-4 py-4 sm:pl-6">
@@ -361,3 +395,5 @@ function CustomerSkeleton() {
     </tr>
   );
 }
+
+

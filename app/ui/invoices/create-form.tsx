@@ -7,12 +7,20 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
-import { createInvoice } from '@/app/lib/actions';
-  
+import { useActionState } from 'react';
+import { createInvoice, State } from '@/app/lib/actions';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
+  // Ensure initial state matches the expected structure
+  const initialState: State = {
+    message: null, 
+    errors: {} // Initialize errors as an empty object
+  };
+
+  const [state, formAction] = useActionState(createInvoice, initialState);
+
   return (
-    <form  action={createInvoice}>
+    <form action={formAction}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
@@ -37,6 +45,9 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
             </select>
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
+          {state.errors?.customerId && (
+            <p className="text-red-500 text-xs mt-2">{state.errors.customerId}</p>
+          )}
         </div>
 
         {/* Invoice Amount */}
@@ -57,6 +68,9 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
           </div>
+          {state.errors?.amount && (
+            <p className="text-red-500 text-xs mt-2">{state.errors.amount}</p>
+          )}
         </div>
 
         {/* Invoice Status */}
@@ -98,8 +112,12 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               </div>
             </div>
           </div>
+          {state.errors?.status && (
+            <p className="text-red-500 text-xs mt-2">{state.errors.status}</p>
+          )}
         </fieldset>
       </div>
+
       <div className="mt-6 flex justify-end gap-4">
         <Link
           href="/dashboard/invoices"
@@ -109,6 +127,9 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
         </Link>
         <Button type="submit">Create Invoice</Button>
       </div>
+      {state.message && (
+        <p className="text-green-500 text-xs mt-2">{state.message}</p>
+      )}
     </form>
   );
 }

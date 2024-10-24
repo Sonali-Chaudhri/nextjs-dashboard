@@ -1,9 +1,10 @@
 "use client";
 import {
-  UserGroupIcon,
+  // UserGroupIcon,
   HomeIcon,
   DocumentDuplicateIcon,
   KeyIcon, // Import KeyIcon for Roles
+  UserIcon, // Import UserIcon for Customer
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,8 +18,13 @@ const links = [
     href: "/dashboard/invoices",
     icon: DocumentDuplicateIcon,
   },
-  { name: "Customers", href: "/dashboard/customers", icon: UserGroupIcon },
-  { name: "Roles", href: "/dashboard/roles", icon: KeyIcon }, // Use KeyIcon for Roles
+  // { name: "Customers", href: "/dashboard/customers", icon: UserGroupIcon },
+  { name: "Roles", href: "/dashboard/roles", icon: KeyIcon },
+  {
+    name: "Customer",
+    href: "/dashboard/customer",
+    icon: UserIcon, // Use UserIcon directly
+  },
 ];
 
 export default function NavLinks() {
@@ -38,7 +44,7 @@ export default function NavLinks() {
               }
             )}
           >
-            <LinkIcon className="w-6" />
+            <LinkIcon className="w-6" aria-hidden="true" />
             <p className="hidden md:block">{link.name}</p>
           </Link>
         );

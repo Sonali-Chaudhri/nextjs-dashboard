@@ -13,9 +13,7 @@ const RoleSchema = z.object({
   description: z.string().optional(),
 });
 
-
-
-const CreateRole = RoleSchema.omit({ id: true }); 
+const CreateRole = RoleSchema.omit({ id: true });
 
 export async function createRole(formData: FormData) {
   console.log(formData);
@@ -31,7 +29,7 @@ export async function createRole(formData: FormData) {
   `;
 
   revalidatePath("/dashboard/roles");
-  redirect("/dashboard/roles"); 
+  redirect("/dashboard/roles");
 }
 
 export async function deleteRole(id: string) {
@@ -51,11 +49,9 @@ const FormSchemas = z.object({
   description: z.string().optional(),
 });
 
-
 // Update Role Function
 export async function updateRole(id: string, formData: FormData) {
-
- const updateRoleSchema = FormSchemas.omit({ id: true });
+  const updateRoleSchema = FormSchemas.omit({ id: true });
 
   const { roleName, description } = updateRoleSchema.parse({
     roleName: formData.get("name"),
@@ -91,50 +87,145 @@ const FormSchema = z.object({
 });
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
-
 export async function createInvoice(formData: FormData) {
-  const { customerId, amount, status } = CreateInvoice.parse({
-    customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
-    status: formData.get("status"),
+  // Validate form fields using Zod
+  const validatedFields = CreateInvoice.safeParse({
+    customerId: formData.get('customerId'),
+    amount: formData.get('amount'),
+    status: formData.get('status'),
   });
-  // Test it out:
-  const amountInCents = amount * 100;
-  const date = new Date().toISOString().split("T")[0];
 
-  await sql`
-    INSERT INTO invoices (customer_id, amount, status, date) 
-    VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-  `;
-  revalidatePath("/dashboard/invoices");
-  redirect("/dashboard/invoices");
+  // If form validation fails, return errors early. Otherwise, continue.
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Invoice.',
+    };
+  }
+
+  // Prepare data for insertion into the database
+  const { customerId, amount, status } = validatedFields.data;
+  const amountInCents = amount * 100;
+  const date = new Date().toISOString().split('T')[0];
+
+  // Insert data into the database
+  try {
+    await sql`
+      INSERT INTO invoices (customer_id, amount, status, date)
+      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+    `;
+  } catch (error) {
+    // If a database error occurs, return a more specific error.
+    return {
+      message: 'Database Error: Failed to Create Invoice.',
+    };
+  }
+
+  // Revalidate the cache for the invoices page and redirect the user.
+  revalidatePath('/dashboard/invoices');
+  redirect('/dashboard/invoices');
 }
+
+
 
 // Use Zod to update the expected types
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
 
 // ...
-
 export async function updateInvoice(id: string, formData: FormData) {
   const { customerId, amount, status } = UpdateInvoice.parse({
-    customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
-    status: formData.get("status"),
+    customerId: formData.get('customerId'),
+    amount: formData.get('amount'),
+    status: formData.get('status'),
+  });
+ 
+  const amountInCents = amount * 100;
+ 
+  try {
+    await sql`
+        UPDATE invoices
+        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+        WHERE id = ${id}
+      `;
+  } catch (error) {
+    return { message: 'Database Error: Failed to Update Invoice.' };
+  }
+ 
+  revalidatePath('/dashboard/invoices');
+  redirect('/dashboard/invoices');
+}
+
+
+export async function deleteInvoice(id: string) {
+
+
+  try {
+    await sql`DELETE FROM invoices WHERE id = ${id}`;
+    revalidatePath('/dashboard/invoices');
+    return { message: 'Deleted Invoice.' };
+  } catch (error) {
+    return { message: 'Database Error: Failed to Delete Invoice.' };
+  }
+}
+
+
+
+
+
+
+
+ 
+
+const CustomerSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+});
+
+const CreateCustomer = CustomerSchema.omit({ id: true });
+
+export async function createCustomer(formData: FormData) {
+  console.log(formData);
+
+  const { name, email } = CreateCustomer.parse({
+    name: formData.get("name"),
+    email: formData.get("email"),
   });
 
-  const amountInCents = amount * 100;
+  await sql`
+    INSERT INTO customer (name, email)
+    VALUES (${name}, ${email})
+  `;
+
+  revalidatePath("/dashboard/customer");
+  redirect("/dashboard/customer");
+}
+
+
+
+
+
+const UpdateCustomer = CustomerSchema.omit({ id: true });
+
+// Function to update an existing customer
+export async function updateCustomer(id: string, formData: FormData) {
+  const { name, email } = UpdateCustomer.parse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+  });
 
   await sql`
-    UPDATE invoices
-    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+    UPDATE customer
+    SET name = ${name}, email = ${email}
     WHERE id = ${id}
   `;
 
-  revalidatePath("/dashboard/invoices");
-  redirect("/dashboard/invoices");
+  revalidatePath("/dashboard/customer–");
+  redirect("/dashboard/customer");
 }
 
-export async function deleteInvoice(id: string) {
-  await sql`DELETE FROM invoices WHERE id = ${id}`;
-  revalidatePath("/dashboard/invoices");
+// Function to delete a customer
+export async function deleteCustomer(id: string) {
+  await sql`DELETE FROM customer WHERE id = ${id}`;
+  revalidatePath("/dashboard/customer");
 }

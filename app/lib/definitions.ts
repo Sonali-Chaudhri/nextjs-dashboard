@@ -14,8 +14,24 @@ export type Customer = {
   id: string;
   name: string;
   email: string;
-  image_url: string;
+  // image_url: string;
 };
+// interface State {
+//   message: string | null;
+//   errors: {
+//     customerId?: string;
+//     amount?: string;
+//     status?: string;
+//   };
+// }
+
+
+export type CustomerTableType = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 
 export type Invoice = {
   id: string;
@@ -76,7 +92,13 @@ export type FormattedCustomersTable = {
 export type CustomerField = {
   id: string;
   name: string;
-};
+}
+
+export type CustomerForm = {
+  id: string;             // Unique identifier for the customer
+  name: string;           // Customer's name
+  email: string;  
+   }
 
 export type InvoiceForm = {
   id: string;

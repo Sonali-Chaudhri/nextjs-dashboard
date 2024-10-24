@@ -1,7 +1,8 @@
 import { sql } from "@vercel/postgres";
 import {
   CustomerField,
-  CustomersTableType,
+  CustomerForm,
+  CustomerTableType,
   InvoiceForm,
   InvoicesTable,
   LatestInvoiceRaw,
@@ -10,6 +11,7 @@ import {
   RoleField,
 } from "./definitions";
 import { formatCurrency } from "./utils";
+// import { CustomerForm } from '@/app/lib/definitions
 
 export async function fetchRevenue() {
   try {
@@ -125,26 +127,22 @@ export async function fetchFilteredInvoices(
 
 
 
-// Fetch all roles   //check on db qury
-
-export async function fetchRoles() {
+//s
+export async function fetchCustomers() {
   try {
-    const data = await sql`
-      SELECT role.id, role.name, role.description
-      FROM role
-      ORDER BY role.name ASC
+    const data = await sql<CustomerField>`
+      SELECT
+        id,
+        name
+      FROM customers
+      ORDER BY name ASC
     `;
 
-    const roles = data.rows.map((role) => ({
-      id: role.id,
-      name: role.name,
-      description: role.description,
-    }));
-
-    return roles;
-  } catch (error) {
-    console.error("Database Error:", error); // Log the error
-    throw new Error("Failed to fetch roles.");
+    const customers = data.rows;
+    return customers;
+  } catch (err) {
+    console.error('Database Error:', err);
+    throw new Error('Failed to fetch all customers.');
   }
 }
 
@@ -171,27 +169,46 @@ export async function fetchInvoicesPages(query: string) {
   }
 }
 
-//pagination
-export async function fetchRolesPages(query: string) {
+export async function fetchCustomersPages(query: string) {
   try {
-    console.log("Search query:", query);
-    
-    const count = await sql`SELECT COUNT(*)
-      FROM role
+    const count = await sql`
+      SELECT COUNT(*)
+      FROM customer
       WHERE
         name ILIKE ${`%${query}%`} OR
-        description ILIKE ${`%${query}%`}
+        email ILIKE ${`%${query}%`}
     `;
 
-    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE); // Adjusted to count[0]
     return totalPages;
   } catch (error) {
-    console.error("Database Error:", error); // Log the error message
-    throw new Error("Failed to fetch total number of roles.");
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch total number of customers.");
   }
 }
 
+     
 
+
+
+export async function fetchCustomerById(id: string) {
+  try {
+    const data = await sql<CustomerForm>`
+      SELECT
+        customer.id,
+        customer.name,
+        customer.email
+      FROM customer
+      WHERE customer.id = ${id}; 
+    `;
+
+    const customer = data.rows[0]; // Get the first customer from the result
+    return customer || null; // Return null if no customer found
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch customer.");
+  }
+}
 
 
 
@@ -213,21 +230,21 @@ export async function fetchInvoiceById(id: string) {
       // Convert amount from cents to dollars
       amount: invoice.amount / 100,
     }));
-
+    console.log(invoice);
     return invoice[0];
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch invoice.");
   }
 }
-
-export async function fetchCustomers() {
+/// customer
+export async function fetchCustomer() {
   try {
     const data = await sql<CustomerField>`
       SELECT
         id,
         name
-      FROM customers
+      FROM customer
       ORDER BY name ASC
     `;
 
@@ -235,42 +252,67 @@ export async function fetchCustomers() {
     return customers;
   } catch (err) {
     console.error("Database Error:", err);
-    throw new Error("Failed to fetch all customers.");
+    throw new Error("Failed to fetch all customer.");
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+//customer
+
+
+export async function fetchCustomerPages(query: string) {
   try {
-    const data = await sql<CustomersTableType>`
-		SELECT
-		  customers.id,
-		  customers.name,
-		  customers.email,
-		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
-		FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
-		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `;
+    console.log("Search query:", query);
 
-    const customers = data.rows.map((customer) => ({
-      ...customer,
-      total_pending: formatCurrency(customer.total_pending),
-      total_paid: formatCurrency(customer.total_paid),
-    }));
+    const countResult = await sql`
+      SELECT COUNT(*)
+      FROM customer
+      WHERE
+        name ILIKE ${`%${query}%`} OR
+        email ILIKE ${`%${query}%`}
+    `;
 
-    return customers;
-  } catch (err) {
-    console.error("Database Error:", err);
-    throw new Error("Failed to fetch customer table.");
+    // Calculate the total pages based on the count
+    const totalPages = Math.ceil(Number(countResult.rows[0].count) / ITEMS_PER_PAGE);
+    
+    return totalPages; 
+  } catch (error) {
+    console.error("Database Error:", error); // Log the error message
+    throw new Error("Failed to fetch total number of customers.");
   }
 }
+
+
+
+
+
+export async function fetchFilteredCustomer(query: string, currentPage: number) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    const customers = await sql`
+      SELECT
+        customer.id,
+        customer.name,
+        customer.email
+      FROM customer
+      WHERE
+        customer.name ILIKE ${`%${query}%`} OR
+        customer.email ILIKE ${`%${query}%`}
+      ORDER BY customer.name ASC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+
+    return customers.rows; // Return the paginated rows of customers
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch customers.");
+  }
+}
+
+
+
+
+
 
 // Fetch role by ID
 export async function fetchRoleById(id: string) {
@@ -303,12 +345,52 @@ export async function createRole(role: RoleField) {
   }
 }
 
+// Fetch all roles   //check on db qury
 
+export async function fetchRoles() {
+  try {
+    const data = await sql`
+      SELECT role.id, role.name, role.description
+      FROM role
+      ORDER BY role.name ASC
+    `;
+
+    const roles = data.rows.map((role) => ({
+      id: role.id,
+      name: role.name,
+      description: role.description,
+    }));
+
+    return roles;
+  } catch (error) {
+    console.error("Database Error:", error); // Log the error
+    throw new Error("Failed to fetch roles.");
+  }
+}
+
+//pagination
+export async function fetchRolesPages(query: string) {
+  try {
+    console.log("Search query:", query);
+
+    const count = await sql`SELECT COUNT(*)
+      FROM role
+      WHERE
+        name ILIKE ${`%${query}%`} OR
+        description ILIKE ${`%${query}%`}
+    `;
+
+    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error("Database Error:", error); // Log the error message
+    throw new Error("Failed to fetch total number of roles.");
+  }
+}
 // const ITEMS_PER_PAGE = 6;
 
 export async function fetchFilteredRoles(query: string, currentPage: number) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
 
   try {
     const roles = await sql`
@@ -330,7 +412,6 @@ export async function fetchFilteredRoles(query: string, currentPage: number) {
     throw new Error("Failed to fetch roles.");
   }
 }
-
 
 async function testDbConnection() {
   try {

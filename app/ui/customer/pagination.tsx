@@ -14,7 +14,7 @@ const generatePagination = (currentPage: number, totalPages: number) => {
     if (
       i === 1 || // First page
       i === totalPages || // Last page
-      (i >= currentPage - range && i <= currentPage + range) // Pages near the current page
+      (i >= currentPage - range && i <= currentPage + range) 
     ) {
       pages.push(i);
     } else if (pages[pages.length - 1] !== "...") {

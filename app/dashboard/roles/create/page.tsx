@@ -1,24 +1,24 @@
-import CreateCustomerForm from '@/app/ui/customer/create'; // Adjust the path to your form component
-import Breadcrumbs from '@/app/ui/customer/breadcrumbs'; // Adjust the path to your breadcrumbs component
-import { fetchCustomers} from '@/app/lib/data'; // Ensure this function is implemented to fetch customers
+import CreateRoleForm from '@/app/ui/roles/create-role-form'; // Adjust the path to your role form component
+import Breadcrumbs from '@/app/ui/roles/breadcrumbs'; // Adjust the path to your breadcrumbs component
+import { fetchRoles } from '@/app/lib/data'; // Ensure this function is implemented to fetch existing roles, if needed
 
 export default async function Page() {
-  // Fetch existing customers, if needed for some functionality (e.g., a dropdown)
-  const customers = await fetchCustomers();
+  // Fetch existing roles, if needed for some functionality (e.g., a dropdown)
+  const roles = await fetchRoles();
 
   return (
     <main>
       <Breadcrumbs
         breadcrumbs={[
-          { label: 'Customers', href: '/dashboard/customers' },
+          { label: 'Roles', href: '/dashboard/roles' },
           {
-            label: 'Create Customer',
-            href: '/dashboard/customers/create',
+            label: 'Create Role',
+            href: '/dashboard/roles/create',
             active: true,
           },
         ]}
       />
-      <CreateCustomerForm /> {/* Pass customers if needed for any purpose */}
+      <CreateRoleForm /> {/* Pass roles if needed for any purpose */}
     </main>
   );
 }

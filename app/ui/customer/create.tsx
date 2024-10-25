@@ -53,6 +53,7 @@ export default function CreateCustomerForm() {
           placeholder="Enter customer name"
           className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm outline-2 placeholder:text-gray-500"
           required
+          
         />
       </div>
 

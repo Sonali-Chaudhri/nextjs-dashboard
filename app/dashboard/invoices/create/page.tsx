@@ -1,10 +1,15 @@
-// import Form from '@/app/ui/invoices/create-form';
+import { fetchCustomers } from '@/app/lib/data';
+import Form from '@/app/ui/invoices/create-form';
 import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
-import { fetchCustomer} from '@/app/lib/data';
- 
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Create Invoice',
+};
+
 export default async function Page() {
-  const customers = await fetchCustomer();
- 
+  const customers = await fetchCustomers();
+
   return (
     <main>
       <Breadcrumbs
@@ -17,7 +22,7 @@ export default async function Page() {
           },
         ]}
       />
-      {/* <Form customers={customers} /> */}
+      <Form customers={customers} />
     </main>
   );
 }

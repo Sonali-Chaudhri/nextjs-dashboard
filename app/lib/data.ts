@@ -87,7 +87,7 @@ export async function fetchCardData() {
   }
 }
 
-const ITEMS_PER_PAGE = 1;
+const ITEMS_PER_PAGE = 2;
 export async function fetchFilteredInvoices(
   query: string,
   currentPage: number
@@ -213,7 +213,7 @@ export async function fetchCustomerById(id: string) {
 
 
 
-export async function fetchInvoiceById(id: string) {
+export async function fetchInvoiceById(id: string): Promise<InvoiceForm | null> {
   try {
     const data = await sql<InvoiceForm>`
       SELECT
@@ -225,18 +225,29 @@ export async function fetchInvoiceById(id: string) {
       WHERE invoices.id = ${id};
     `;
 
-    const invoice = data.rows.map((invoice) => ({
-      ...invoice,
+    // Check if the invoice exists
+    if (data.rows.length === 0) {
+      console.warn(`Invoice with ID ${id} not found.`);
+      return null; // Return null if no invoice is found
+    }
+
+    const invoice = {
+      ...data.rows[0], // Get the first row
       // Convert amount from cents to dollars
-      amount: invoice.amount / 100,
-    }));
+      amount: data.rows[0].amount / 100,
+    };
+
     console.log(invoice);
-    return invoice[0];
+    return invoice;
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch invoice.");
   }
 }
+
+
+
+
 /// customer
 export async function fetchCustomer() {
   try {

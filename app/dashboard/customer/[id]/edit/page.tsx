@@ -1,31 +1,38 @@
-import Form from "@/app/ui/customer/edit"; // Adjust the path for your edit customer form
-import Breadcrumbs from "@/app/ui/customer/breadcrumbs"; // Adjust the path for your breadcrumbs
-import { fetchCustomerById } from "@/app/lib/data"; // Adjust to your data fetching function
-import { notFound } from "next/navigation";
+// /app/dashboard/customers/[id]/edit/page.tsx
 
-export default async function Page({ params }: { params: { id: string } }) {
+import Form from '@/app/ui/customer/edit'; // Adjust the path for your edit customer form
+import Breadcrumbs from '@/app/ui/customer/breadcrumbs'; // Adjust the path for your breadcrumbs
+import { fetchCustomerById } from '@/app/lib/data'; // Adjust to your data fetching functions
+import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Edit Customer',
+};
+
+export default async function Page(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const id = params.id;
-  const [customer] = await Promise.all([
-    fetchCustomerById(id), // Fetch the customer by ID
-  ]);
+
+  const customer = await fetchCustomerById(id); // Fetch customer by ID
+
   if (!customer) {
-    notFound();
+    notFound(); // Redirect to 404 if the customer is not found
   }
 
   return (
     <main>
       <Breadcrumbs
         breadcrumbs={[
-          { label: "Customer", href: "/dashboard/customer" },
+          { label: 'Customers', href: '/dashboard/customers' },
           {
-            label: "Edit Customer",
-            href: `/dashboard/customer/${id}/edit`, // Active link for the current edit page
+            label: 'Edit Customer',
+            href: `/dashboard/customers/${id}/edit`,
             active: true,
           },
         ]}
       />
-      <Form customer={customer} />{" "}
-      {/* Pass the fetched customer data to the form */}
+      <Form customer={customer} /> {/* Pass the customer data to the form */}
     </main>
   );
 }

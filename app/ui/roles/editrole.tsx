@@ -1,62 +1,99 @@
-'use client';
+"use client";
 
-import { Role } from '@/app/lib/definitions';
-import { CheckIcon, UserCircleIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link';
-import { Button } from '@/app/ui/button';
-import  {updateRole}from "@/app/lib/actions" // Ensure this is the correct function you're importing.
+import { RoleForm } from "@/app/lib/definitions";
+import { UserCircleIcon, PencilIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
+import { Button } from "@/app/ui/button";
+import { updateRole, RoleState } from "@/app/lib/actions";
+import { useActionState } from "react";
 
-export default function EditRoleForm({ role }: { role: Role }) {
+export default function EditRoleForm({ role }: { role: RoleForm }) {
+  const initialState: RoleState = { message: null, errors: {} };
 
-  // Fix the bind method with UpdateRole
-  const updateRoleById = updateRole.bind(null, role.id);
+  // Check if role and its ID are defined
+  if (!role || !role.id) {
+    console.error("Role or Role ID is undefined");
+    return null; // Return null or an error message
+  }
+
+  // Bind the updateRole function with the role ID
+  const updateRoleWithId = updateRole.bind(null, role.id);
+  const [state, formAction] = useActionState(updateRoleWithId, initialState);
 
   return (
-    <form action={updateRoleById} className="space-y-6 bg-white p-6 shadow-md rounded-lg">
-      {/* Role Name */}
-      <div className="mb-4">
-        <label htmlFor="name" className="mb-2 block text-sm font-semibold text-gray-700">
-          Role Name
-        </label>
-        <div className="relative">
-          <input
-            id="name"
-            name="name"
-            type="text"
-            defaultValue={role.name}
-            placeholder="Enter role name"
-            className="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-500"
-          />
-          <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+    <form action={formAction} method="POST" className="space-y-6">
+      <div className="rounded-md bg-gray-50 p-4 md:p-6">
+        {/* Role Name */}
+        <div className="mb-4">
+          <label htmlFor="name" className="mb-2 block text-sm font-medium">
+            Role Name
+          </label>
+          <div className="relative">
+            <input
+              id="name"
+              name="name"
+              type="text"
+              defaultValue={role.name}
+              placeholder="Enter role name"
+              className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              aria-describedby="roleName-error"
+              required
+            />
+            <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
+          </div>
+          <div id="roleName-error" aria-live="polite" aria-atomic="true">
+            {state.errors?.name?.map((error: string) => (
+              <p className="mt-2 text-sm text-red-500" key={error}>
+                {error}
+              </p>
+            ))}
+          </div>
+        </div>
+
+        {/* Role Description */}
+        <div className="mb-4">
+          <label htmlFor="description" className="mb-2 block text-sm font-medium">
+            Description
+          </label>
+          <div className="relative mt-2 rounded-md">
+            <input
+              id="description"
+              name="description"
+              type="text"
+              defaultValue={role.description}
+              placeholder="Enter role description"
+              className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              aria-describedby="description-error"
+              required
+            />
+            <PencilIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+          </div>
+          <div id="description-error" aria-live="polite" aria-atomic="true">
+            {state.errors?.description?.map((error: string) => (
+              <p className="mt-2 text-sm text-red-500" key={error}>
+                {error}
+              </p>
+            ))}
+          </div>
+        </div>
+
+        {/* Form Submission Feedback */}
+        <div aria-live="polite" aria-atomic="true">
+          {state.message && (
+            <p className="my-2 text-sm text-red-500">{state.message}</p>
+          )}
         </div>
       </div>
 
-      {/* Role Description */}
-      <div className="mb-4">
-        <label htmlFor="description" className="mb-2 block text-sm font-semibold text-gray-700">
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          defaultValue={role.description}
-          placeholder="Enter role description"
-          className="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 px-3 text-sm focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-500"
-        />
-      </div>
-
       {/* Action Buttons */}
-      <div className="flex items-center justify-between space-x-4">
+      <div className="mt-6 flex justify-end gap-4">
         <Link
           href="/dashboard/roles"
-          className="flex items-center justify-center h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
         >
           Cancel
         </Link>
-        <Button type="submit" className="flex items-center justify-center h-10 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 transition-colors">
-          <CheckIcon className="mr-2 h-4 w-4" />
-          Edit Role
-        </Button>
+        <Button type="submit">Edit Role</Button>
       </div>
     </form>
   );

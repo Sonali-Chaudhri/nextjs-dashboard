@@ -4,85 +4,121 @@ import { z } from "zod";
 import { sql } from "@vercel/postgres";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { error } from "console";
 
-//role
+// Define the Zod schema for validating role data
 
 const RoleSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
+  id: z.string(),
+
+  name: z.string({
+    invalid_type_error: "Role name is required.",
+  }),
+
+  description: z.string({
+    invalid_type_error: "Description is required.",
+  }),
 });
 
-const CreateRole = RoleSchema.omit({ id: true });
+const CreateRoleSchema = RoleSchema.omit({ id: true });
 
-export async function createRole(formData: FormData) {
-  console.log(formData);
+export type RoleState = {
+  errors?: {
+    name?: string[];
+    description?: string[];
+  };
+  message?: string | null;
+};
 
-  const { name, description } = CreateRole.parse({
+export async function createRole(prevState: RoleState, formData: FormData) {
+  // Validate form using Zod
+  const validatedFields = CreateRoleSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
   });
 
-  await sql`
-    INSERT INTO role (name, description)
-    VALUES (${name}, ${description})
-  `;
+  // If form validation fails, return errors early. Otherwise, continue.
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Create Role.",
+    };
+  }
 
+  // Prepare data for insertion into the database
+  const { name, description } = validatedFields.data;
+
+  // Insert data into the database
+  try {
+    await sql`
+      INSERT INTO role (name, description)
+      VALUES (${name}, ${description})
+    `;
+  } catch (error) {
+    // If a database error occurs, return a more specific error.
+    return {
+      message: "Database Error: Failed to Create Role.",
+    };
+  }
+
+  // Revalidate the cache for the roles page and redirect the user.
   revalidatePath("/dashboard/roles");
   redirect("/dashboard/roles");
 }
 
+
+// Delete Role Function
 export async function deleteRole(id: string) {
   try {
     await sql`DELETE FROM role WHERE id = ${id}`;
-    revalidatePath("/dashboard/roles"); // Revalidate the roles path to refresh the data
+    revalidatePath("/dashboard/roles");
   } catch (error) {
     console.error("Error deleting role:", error);
-    throw new Error("Failed to delete role."); // Optional: throw an error to be handled in the UI
+    throw new Error("Failed to delete role.");
   }
 }
 
-// Zod schema for validating the form data
-const FormSchemas = z.object({
-  id: z.string(),
-  roleName: z.string().min(1, "Role name is required"),
-  description: z.string().optional(),
-});
+const UpdateRole = RoleSchema.omit({ id: true }); // Assuming id is not updatable
 
 // Update Role Function
-export async function updateRole(id: string, formData: FormData) {
-  const updateRoleSchema = FormSchemas.omit({ id: true });
-
-  const { roleName, description } = updateRoleSchema.parse({
-    roleName: formData.get("name"),
+export async function updateRole(
+  id: string,
+  prevState: RoleState,
+  formData: FormData
+) {
+  // Validate the form data using Zod schema
+  const validatedFields = UpdateRole.safeParse({
+    name: formData.get("name"),
     description: formData.get("description"),
   });
 
-  // Debugging logs to ensure proper form data is received
-  console.log(`
-    UPDATE role
-    SET name = ${roleName}, description = ${description}
-    WHERE id = ${id}
-  `);
+  // If validation fails, return errors early
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Update Role.",
+    };
+  }
 
-  // Execute the SQL query to update the role
-  await sql`
-    UPDATE role
-    SET name = ${roleName}, description = ${description}
-    WHERE id = ${id}
-  `;
+  const { name, description } = validatedFields.data;
 
-  // Revalidate the path and redirect to the roles dashboard
+  try {
+    await sql`
+      UPDATE role
+      SET name = ${name}, description = ${description}
+      WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error("Error updating role:", error);
+    return { message: "Database Error: Failed to Update Role." };
+  }
+
+  // Revalidate the cache and redirect to roles page
   revalidatePath("/dashboard/roles");
   redirect("/dashboard/roles");
 }
 
-
-
-
 //========Invoices
-export type State = {
+export type InvoiceState = {
   errors?: {
     customerId?: string[];
     amount?: string[];
@@ -93,28 +129,29 @@ export type State = {
 
 const FormSchema = z.object({
   id: z.string(),
-
-  customerId: z.string().nonempty({ message: "Please select a customer." }),
-
+  customerId: z.string({
+    invalid_type_error: "Please select a customer.",
+  }),
   amount: z.coerce
     .number()
     .gt(0, { message: "Please enter an amount greater than $0." }),
-
   status: z.enum(["pending", "paid"], {
     invalid_type_error: "Please select an invoice status.",
   }),
-
   date: z.string(),
 });
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
-export async function createInvoice(prevState: State, formData: FormData) {
+export async function createInvoice(
+  prevState: InvoiceState,
+  formData: FormData
+) {
   // Validate form using Zod
   const validatedFields = CreateInvoice.safeParse({
-    customerId: String(formData.get("customerId")) || "", // Convert to string, default to empty string
-    amount: Number(formData.get("amount")) || 0, // Convert to number, default to 0
-    status: String(formData.get("status")) || "", // Convert to string, default to empty string
+    customerId: formData.get("customerId"),
+    amount: formData.get("amount"),
+    status: formData.get("status"),
   });
 
   // If form validation fails, return errors early. Otherwise, continue.
@@ -150,21 +187,36 @@ export async function createInvoice(prevState: State, formData: FormData) {
 
 //update
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
-export async function updateInvoice(id: string, formData: FormData) {
-  const { customerId, amount, status } = UpdateInvoice.parse({
+
+// ...
+
+export async function updateInvoice(
+  id: string,
+  prevState: InvoiceState,
+  formData: FormData
+) {
+  const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get("customerId"),
     amount: formData.get("amount"),
     status: formData.get("status"),
   });
 
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Update Invoice.",
+    };
+  }
+
+  const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
 
   try {
     await sql`
-        UPDATE invoices
-        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-        WHERE id = ${id}
-      `;
+      UPDATE invoices
+      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+      WHERE id = ${id}
+    `;
   } catch (error) {
     return { message: "Database Error: Failed to Update Invoice." };
   }
@@ -183,18 +235,14 @@ export async function deleteInvoice(id: string) {
   }
 }
 
-
-
-
-
-
-
-
-
 const CustomerSchema = z.object({
   id: z.string({ invalid_type_error: "ID must be a string" }).optional(),
-  name: z.string({ invalid_type_error: "Please provide a valid name" }).min(1, "Name is required"),
-  email: z.string({ invalid_type_error: "Please provide a valid email address" }).email("Invalid email address"),
+  name: z
+    .string({ invalid_type_error: "Please provide a valid name" })
+    .min(1, "Name is required"),
+  email: z
+    .string({ invalid_type_error: "Please provide a valid email address" })
+    .email("Invalid email address"),
 });
 
 export type States = {
@@ -209,7 +257,10 @@ export type States = {
 // Create schema for customer creation (without ID)
 const CreateCustomer = CustomerSchema.omit({ id: true });
 
-export async function createCustomer(prevState: States, formData: FormData): Promise<States> {
+export async function createCustomer(
+  prevState: States,
+  formData: FormData
+): Promise<States> {
   // Validate form data using Zod
   const validatedFields = CreateCustomer.safeParse({
     name: formData.get("name"),
@@ -246,34 +297,38 @@ export async function createCustomer(prevState: States, formData: FormData): Pro
   redirect("/dashboard/customer");
 }
 
-
-
-
-
-
-
 const UpdateCustomer = CustomerSchema.omit({ id: true });
 
 // Function to update an existing customer
 export async function updateCustomer(id: string, formData: FormData) {
-  const { name, email } = UpdateCustomer.parse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-  });
+  let name, email;
+
+  // Validate and parse the form data
+  try {
+    ({ name, email } = UpdateCustomer.parse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+    }));
+  } catch (validationError) {
+    return { message: "Validation Error " };
+  }
+
+  // Update the customer in the database
   try {
     await sql`
-    UPDATE customer
-    SET name = ${name}, email = ${email}
-    WHERE id = ${id}
-  `;
+      UPDATE customer
+      SET name = ${name}, email = ${email}
+      WHERE id = ${id}
+    `;
   } catch (error) {
+    console.error("Error updating customer:", error);
     return { message: "Database Error: Failed to Update Customer." };
   }
 
-  revalidatePath("/dashboard/customer–");
+  // Revalidate and redirect
+  revalidatePath("/dashboard/customer");
   redirect("/dashboard/customer");
 }
-
 // Function to delete a customer
 export async function deleteCustomer(id: string) {
   try {

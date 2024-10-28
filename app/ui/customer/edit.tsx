@@ -25,6 +25,7 @@ export default function EditCustomerForm({ customer }: { customer: Customer }) {
           defaultValue={customer.name}
           placeholder="Enter customer name"
           className="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 px-3 text-sm focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-500"
+          required
         />
       </div>
 
@@ -40,6 +41,7 @@ export default function EditCustomerForm({ customer }: { customer: Customer }) {
           defaultValue={customer.email}
           placeholder="Enter customer email"
           className="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 px-3 text-sm focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-500"
+          required
         />
       </div>
 

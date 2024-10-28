@@ -1,12 +1,23 @@
-import Form from "@/app/ui/roles/editrole";
-import Breadcrumbs from "@/app/ui/roles/breadcrumbs";
-import { fetchRoleById } from '@/app/lib/data';
+import Form from "@/app/ui/roles/editrole"; // Adjust the import path according to your file structure
+import Breadcrumbs from "@/app/ui/roles/breadcrumbs"; // Adjust the import path accordingly
+import { fetchRoleById, fetchRoles } from "@/app/lib/data"; // Ensure you have these functions in your data layer
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
 
-export default async function Page({ params }: { params: { id: string } }) {
+export const metadata: Metadata = {
+  title: "Edit Role",
+};
+
+export default async function Page(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const id = params.id;
   const [role] = await Promise.all([
     fetchRoleById(id),
   ]);
+
+  if (!role) {
+    notFound();
+  }
 
   return (
     <main>
@@ -20,7 +31,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           },
         ]}
       />
-      <Form role={role}/>
+      <Form role={role} /> {/* Pass the role data to the Form */}
     </main>
   );
 }

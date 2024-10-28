@@ -1,62 +1,46 @@
-'use client'
+"use client";
 
-
-import { useState } from 'react';
-import { Button } from '@/app/ui/button';
-import { createRole } from '@/app/lib/actions'; 
-import Link from 'next/link';
-
-
+import { useActionState } from "react";
+import { Button } from "@/app/ui/button";
+import { createRole, RoleState } from "@/app/lib/actions"; // Ensure that your createRole function and RoleState type are properly defined
+import Link from "next/link";
 
 export default function CreateRoleForm() {
-  const [roleName, setRoleName] = useState('');
-  const [description, setDescription] = useState('');
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!roleName || !description) {
-      setError('Both fields are required.');
-      return;
-    }
-
-    try {
-      // Create a FormData object to send to the server
-      const formData = new FormData();
-      formData.append('name', roleName);
-      formData.append('description', description);
-
-      // Call the createRole function with the FormData
-      await createRole(formData);
-      setRoleName('');
-      setDescription('');
-    } catch (err) {
-      console.error(err); // Log the error for debugging
-      setError('Failed to create role. Please try again.');
-    }
-  };
+  const initialState: RoleState = { message: null, errors: {} };
+  const [state, formAction] = useActionState(createRole, initialState);
 
   return (
-    <form onSubmit={handleSubmit}  className="rounded-md bg-gray-50 p-4 md:p-6">
-      {error && <p className="mb-4 text-red-500">{error}</p>}
+    <form action={formAction} className="rounded-md bg-gray-50 p-4 md:p-6">
+      <h2 className="sr-only">Create Role Form</h2>
+      <div aria-live="polite" aria-atomic="true">
+        {state.message && (
+          <p className="mt-2 text-sm text-red-500">{state.message}</p>
+        )}
+      </div>
 
       {/* Role Name */}
       <div className="mb-4">
-        <label htmlFor="roleName" className="mb-2 block text-sm font-medium">
+        <label htmlFor="name" className="mb-2 block text-sm font-medium">
           Role Name
         </label>
         <input
-          id="roleName"
-          name="roleName"
+          id="name"
+          name="name"
           type="text"
-          value={roleName}
-          onChange={(e) => setRoleName(e.target.value)}
           placeholder="Enter role name"
           className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm outline-2 placeholder:text-gray-500"
+          aria-describedby="role-name-description"
           required
         />
+
+        <div id="role-name-error" aria-live="polite" aria-atomic="true">
+          {state.errors?.name &&
+            state.errors.name.map((error: string) => (
+              <p className="mt-2 text-sm text-red-500" key={error}>
+                {error}
+              </p>
+            ))}
+        </div>
       </div>
 
       {/* Role Description */}
@@ -67,12 +51,21 @@ export default function CreateRoleForm() {
         <textarea
           id="description"
           name="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter role description"
           className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm outline-2 placeholder:text-gray-500"
           rows={4}
+          aria-describedby="description-help"
+          required
         />
+
+        <div id="description-error" aria-live="polite" aria-atomic="true">
+          {state.errors?.description &&
+            state.errors.description.map((error: string) => (
+              <p className="mt-2 text-sm text-red-500" key={error}>
+                {error}
+              </p>
+            ))}
+        </div>
       </div>
 
       {/* Buttons */}

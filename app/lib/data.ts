@@ -7,8 +7,9 @@ import {
   InvoicesTable,
   LatestInvoiceRaw,
   Revenue,
-  Role,
+  
   RoleField,
+  RoleForm,
 } from "./definitions";
 import { formatCurrency } from "./utils";
 // import { CustomerForm } from '@/app/lib/definitions
@@ -87,7 +88,7 @@ export async function fetchCardData() {
   }
 }
 
-const ITEMS_PER_PAGE = 2;
+const ITEMS_PER_PAGE = 3;
 export async function fetchFilteredInvoices(
   query: string,
   currentPage: number
@@ -213,7 +214,7 @@ export async function fetchCustomerById(id: string) {
 
 
 
-export async function fetchInvoiceById(id: string): Promise<InvoiceForm | null> {
+export async function fetchInvoiceById(id: string) {
   try {
     const data = await sql<InvoiceForm>`
       SELECT
@@ -225,23 +226,16 @@ export async function fetchInvoiceById(id: string): Promise<InvoiceForm | null> 
       WHERE invoices.id = ${id};
     `;
 
-    // Check if the invoice exists
-    if (data.rows.length === 0) {
-      console.warn(`Invoice with ID ${id} not found.`);
-      return null; // Return null if no invoice is found
-    }
-
-    const invoice = {
-      ...data.rows[0], // Get the first row
+    const invoice = data.rows.map((invoice) => ({
+      ...invoice,
       // Convert amount from cents to dollars
-      amount: data.rows[0].amount / 100,
-    };
+      amount: invoice.amount / 100,
+    }));
 
-    console.log(invoice);
-    return invoice;
+    return invoice[0];
   } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to fetch invoice.");
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch invoice.');
   }
 }
 
@@ -326,16 +320,34 @@ export async function fetchFilteredCustomer(query: string, currentPage: number) 
 
 
 // Fetch role by ID
+// Define the Role type based on your database schema
+export type Role = {
+  id: string;
+  name: string;
+  description?: string;
+};
 export async function fetchRoleById(id: string) {
   try {
-    const data = await sql<Role>`SELECT * FROM role WHERE id = ${id}`;
-    console.log(data);
-    return data.rows[0]; // Assuming you only expect one role by ID
+    const data = await sql<RoleForm>`
+      SELECT
+        role.id,
+        role.name,
+        role.description
+      FROM role
+      WHERE role.id = ${id};
+    `;
+
+    const role = data.rows.map((role) => ({
+      ...role,
+    }));
+
+    return role[0];
   } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to fetch role.");
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch role.');
   }
 }
+
 
 // Create a new role
 
@@ -343,18 +355,26 @@ export async function createRole(role: RoleField) {
   try {
     const { name, description } = role;
 
-    // Insert the role into the roles table and return the created role
-    const data = await sql`
+    // Insert the role into the roles table
+    await sql`
       INSERT INTO role (name, description) 
-      VALUES (name, description) 
-      `;
+      VALUES (${name}, ${description})
+    `;
 
-    return data.rows[0]; // Return the newly created role
+    // Optionally, retrieve the newly created role
+    const createdRole = await sql`
+      SELECT * FROM role 
+      WHERE name = ${name} AND description = ${description} 
+      ORDER BY id DESC LIMIT 1
+    `;
+
+    return createdRole.rows[0]; // Return the newly created role
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to create role.");
   }
 }
+
 
 // Fetch all roles   //check on db qury
 

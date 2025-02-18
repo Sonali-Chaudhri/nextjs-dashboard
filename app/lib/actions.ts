@@ -4,8 +4,30 @@ import { z } from "zod";
 import { sql } from "@vercel/postgres";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { signIn } from '@/app/auth';
+import { AuthError } from 'next-auth';
 
-// Define the Zod schema for validating role data
+
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    await signIn('credentials', formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return 'Invalid credentials.';
+        default:
+          return 'Something went wrong.';
+      }
+    }
+    throw error;
+  }
+}
+
+
 
 const RoleSchema = z.object({
   id: z.string(),
@@ -30,13 +52,11 @@ export type RoleState = {
 };
 
 export async function createRole(prevState: RoleState, formData: FormData) {
-  // Validate form using Zod
   const validatedFields = CreateRoleSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
   });
 
-  // If form validation fails, return errors early. Otherwise, continue.
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -54,13 +74,11 @@ export async function createRole(prevState: RoleState, formData: FormData) {
       VALUES (${name}, ${description})
     `;
   } catch (error) {
-    // If a database error occurs, return a more specific error.
     return {
       message: "Database Error: Failed to Create Role.",
     };
   }
 
-  // Revalidate the cache for the roles page and redirect the user.
   revalidatePath("/dashboard/roles");
   redirect("/dashboard/roles");
 }
@@ -235,6 +253,9 @@ export async function deleteInvoice(id: string) {
   }
 }
 
+
+
+
 const CustomerSchema = z.object({
   id: z.string({ invalid_type_error: "ID must be a string" }).optional(),
   name: z
@@ -329,6 +350,19 @@ export async function updateCustomer(id: string, formData: FormData) {
   revalidatePath("/dashboard/customer");
   redirect("/dashboard/customer");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Function to delete a customer
 export async function deleteCustomer(id: string) {
   try {

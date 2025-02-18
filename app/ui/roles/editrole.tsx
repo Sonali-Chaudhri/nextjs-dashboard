@@ -10,13 +10,11 @@ import { useActionState } from "react";
 export default function EditRoleForm({ role }: { role: RoleForm }) {
   const initialState: RoleState = { message: null, errors: {} };
 
-  // Check if role and its ID are defined
   if (!role || !role.id) {
     console.error("Role or Role ID is undefined");
-    return null; // Return null or an error message
+    return null; 
   }
 
-  // Bind the updateRole function with the role ID
   const updateRoleWithId = updateRole.bind(null, role.id);
   const [state, formAction] = useActionState(updateRoleWithId, initialState);
 

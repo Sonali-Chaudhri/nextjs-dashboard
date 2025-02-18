@@ -4,8 +4,10 @@ import { useActionState } from "react";
 import { Button } from "@/app/ui/button";
 import { createRole, RoleState } from "@/app/lib/actions"; // Ensure that your createRole function and RoleState type are properly defined
 import Link from "next/link";
+import { RoleField } from "@/app/lib/definitions";
 
-export default function CreateRoleForm() {
+export default function CreateRoleForm({role}:{role:RoleField[]}) {
+
   const initialState: RoleState = { message: null, errors: {} };
   const [state, formAction] = useActionState(createRole, initialState);
 

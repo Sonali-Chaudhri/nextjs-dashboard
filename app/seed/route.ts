@@ -25,7 +25,7 @@ async function seedUsers() {
        `;     }),
   );
 
-   return insertedUsers;
+   return insertedUsers;     //install postres here in project 
  }
 
  async function seedInvoices() {
